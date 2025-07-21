@@ -1,0 +1,39 @@
+from PIL import Image, ImageDraw, ImageFont
+
+def draw_differences(image_path, differences, output_path="diff_output.png"):
+    image = Image.open(image_path).convert("RGBA")
+    overlay = Image.new("RGBA", image.size, (255, 255, 255, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    try:
+        font = ImageFont.load_default()
+    except:
+        font = None
+
+    for diff in differences:
+        bbox = diff.get("bbox")
+        label = diff.get("label", "Added element")
+        if bbox and len(bbox) == 4:
+            x, y, w, h = bbox
+            rect_start = (x, y)
+            rect_end = (x + w, y + h)
+
+            # Draw semi-transparent filled rectangle (yellow with alpha)
+            draw.rectangle([rect_start, rect_end], fill=(255, 255, 0, 100))
+            # Draw thick red border rectangle
+            for i in range(4):  # thickness 4px
+                draw.rectangle([x - i, y - i, x + w + i, y + h + i], outline=(255, 0, 0, 255))
+
+            # Draw label background rectangle for text
+            if font:
+                text_size = draw.textsize(label, font=font)
+                text_bg_rect = [x, y - text_size[1] - 4, x + text_size[0] + 4, y]
+                draw.rectangle(text_bg_rect, fill=(255, 0, 0, 200))
+                draw.text((x + 2, y - text_size[1] - 2), label, fill="white", font=font)
+            else:
+                draw.text((x, y - 12), label, fill="red")
+
+    # Combine overlay with original image
+    combined = Image.alpha_composite(image, overlay)
+    combined.convert("RGB").save(output_path)
+    print(f"[✅] Difference image saved as {output_path}")
