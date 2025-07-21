@@ -1,0 +1,78 @@
+import os
+import base64
+import json
+import re
+from PIL import Image, ImageDraw
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+# Load environment variables
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Setup Gemini
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel("gemini-pro-vision")
+
+# Helper to convert image to base64
+def encode_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode("utf-8")
+
+# Send images to Gemini and get differences
+def get_differences(prev_path, curr_path):
+    prev_b64 = encode_image(prev_path)
+    curr_b64 = encode_image(curr_path)
+
+    response = model.generate_content([
+        {
+            "type": "text",
+            "text": (
+                "Compare the two UI screenshots. "
+                "Identify visual changes in UI elements like buttons, textboxes, dropdowns, etc. "
+                "Return JSON in this format: "
+                "[{\"label\": \"New dropdown\", \"bbox\": [x, y, width, height]}]"
+            )
+        },
+        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{prev_b64}"}},
+        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{curr_b64}"}}
+    ])
+
+    print("\nGemini Response:\n", response.text)
+
+    # Try to extract and parse JSON
+    try:
+        return json.loads(response.text)
+    except:
+        match = re.search(r'\[.*\]', response.text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        return []
+
+# Draw boxes on image
+def draw_differences(image_path, differences, output_path):
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
+
+    for diff in differences:
+        label = diff.get("label", "Change")
+        x, y, w, h = diff["bbox"]
+        draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
+        draw.text((x, y - 12), label, fill="red")
+
+    image.save(output_path)
+    print(f"[✓] Output saved to: {output_path}")
+
+# Main
+if __name__ == "__main__":
+    prev_img = "images/previous.png"
+    curr_img = "images/current.png"
+    output_img = "outputs/annotated_diff.png"
+
+    print("[🔍] Comparing images using Gemini...")
+    differences = get_differences(prev_img, curr_img)
+
+    if differences:
+        draw_differences(curr_img, differences, output_img)
+    else:
+        print("[✓] No UI differences detected or failed to parse.")
