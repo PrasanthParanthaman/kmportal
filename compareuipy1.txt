@@ -1,0 +1,96 @@
+import os
+import base64
+import json
+import re
+from PIL import Image, ImageDraw
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+# ----------------------------
+# 🔐 Load API Key from .env
+# ----------------------------
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not API_KEY:
+    raise ValueError("API key not found in .env file!")
+
+genai.configure(api_key=API_KEY)
+
+# ----------------------------
+# 🤖 Initialize Gemini Model
+# ----------------------------
+model = genai.GenerativeModel("gemini-pro-vision")
+
+# ----------------------------
+# 📤 Upload Image to Gemini
+# ----------------------------
+def upload_image(image_path):
+    with open(image_path, "rb") as f:
+        file = genai.upload_file(f, display_name=os.path.basename(image_path))
+    return file
+
+# ----------------------------
+# 🧠 Get Differences from Gemini
+# ----------------------------
+def get_differences(prev_path, curr_path):
+    print("[📤] Uploading images to Gemini...")
+    prev_file = upload_image(prev_path)
+    curr_file = upload_image(curr_path)
+
+    print("[🤖] Asking Gemini to detect UI differences...")
+    response = model.generate_content(
+        [
+            "Compare these two UI screenshots. Identify visual changes in UI elements like buttons, textboxes, dropdowns, etc. "
+            "Return JSON format: [{\"label\": \"New dropdown\", \"bbox\": [x, y, width, height]}]",
+            prev_file,
+            curr_file,
+        ]
+    )
+
+    print("\n[📨] Gemini Response:\n", response.text)
+
+    # Try parsing the JSON from the response
+    try:
+        return json.loads(response.text)
+    except:
+        match = re.search(r'\[.*\]', response.text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        return []
+
+# ----------------------------
+# 🖼️ Draw Differences on Image
+# ----------------------------
+def draw_differences(image_path, differences, output_path):
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
+
+    for diff in differences:
+        label = diff.get("label", "Change")
+        x, y, w, h = diff["bbox"]
+        draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
+        draw.text((x, y - 12), label, fill="red")
+
+    image.save(output_path)
+    print(f"[✅] Annotated image saved to: {output_path}")
+
+# ----------------------------
+# 🚀 Entry Point
+# ----------------------------
+if __name__ == "__main__":
+    # Paths
+    prev_img = "images/previous.png"
+    curr_img = "images/current.png"
+    output_img = "outputs/annotated_diff.png"
+
+    # Ensure folders exist
+    os.makedirs("outputs", exist_ok=True)
+
+    print("[🔍] Starting UI image comparison...")
+    differences = get_differences(prev_img, curr_img)
+
+    if differences:
+        draw_differences(curr_img, differences, output_img)
+    else:
+        print("[ℹ️] No differences detected or failed to parse response.")
