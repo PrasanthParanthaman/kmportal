@@ -1,0 +1,101 @@
+import os
+import base64
+import json
+import re
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+from google.generativeai import client as genai
+from dotenv import load_dotenv
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise ValueError("Please set your API_KEY in .env file")
+
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
+
+def read_image(image_path):
+    with open(image_path, "rb") as f:
+        img_bytes = f.read()
+    return base64.b64encode(img_bytes).decode("utf-8")
+
+def extract_clean_json(text):
+    """Extract JSON array and strip out comments or invalid parts."""
+    match = re.search(r'\[.*\]', text, re.DOTALL)
+    if not match:
+        print("[⚠️] No JSON array found in response.")
+        return []
+
+    json_str = match.group()
+
+    # Remove JavaScript style comments (//...)
+    json_str = re.sub(r'//.*', '', json_str)
+
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print(f"[❌] JSON decode error: {e}")
+        print("[ℹ️] Raw extracted JSON string:")
+        print(json_str)
+        return []
+
+def get_differences(prev_path, curr_path):
+    print("[🔍] Reading images...")
+    prev_b64 = read_image(prev_path)
+    curr_b64 = read_image(curr_path)
+
+    print("[🤖] Asking Gemini to compare UI differences...")
+    prompt = (
+        "Compare the UI in the two images and return only bounding box changes in strict JSON format like:\n"
+        '[{"label": "Added button", "bbox": [x, y, width, height]}]. '
+        "No comments, no explanation, no markdown formatting."
+    )
+
+    response = model.generate_content([
+        prompt,
+        {"mime_type": "image/png", "data": prev_b64},
+        {"mime_type": "image/png", "data": curr_b64},
+    ])
+
+    print("[📨] Gemini raw response text:")
+    print(response.text)
+
+    differences = extract_clean_json(response.text)
+    return differences
+
+def draw_differences(image_path, differences, output_path="diff_output.png"):
+    image = Image.open(image_path).convert("RGBA")
+    draw = ImageDraw.Draw(image)
+
+    try:
+        font = ImageFont.load_default()
+    except:
+        font = None
+
+    for diff in differences:
+        bbox = diff.get("bbox", None)
+        label = diff.get("label", "Change")
+        if bbox and len(bbox) == 4:
+            x, y, w, h = bbox
+            # Draw red rectangle for differences
+            draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
+            if font:
+                draw.text((x, y - 12), label, fill="red", font=font)
+            else:
+                draw.text((x, y - 12), label, fill="red")
+
+    image.save(output_path)
+    print(f"[✅] Difference image saved as {output_path}")
+
+if __name__ == "__main__":
+    prev_img_path = "previous_ui.png"
+    curr_img_path = "current_ui.png"
+
+    differences = get_differences(prev_img_path, curr_img_path)
+    print("[📊] Differences found:", differences)
+
+    if differences:
+        draw_differences(curr_img_path, differences)
+    else:
+        print("[ℹ️] No differences detected.")
