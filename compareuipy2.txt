@@ -1,0 +1,86 @@
+import os
+import json
+import re
+from PIL import Image, ImageDraw
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+# Load API key from .env
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not API_KEY:
+    raise ValueError("API key not found in .env file!")
+
+# Configure Gemini
+genai.configure(api_key=API_KEY)
+
+# Initialize model
+model = genai.GenerativeModel("gemini-pro-vision")
+
+
+# Read binary image file
+def read_image(image_path):
+    with open(image_path, "rb") as f:
+        return f.read()
+
+
+# Get UI differences from Gemini
+def get_differences(prev_path, curr_path):
+    print("[📤] Reading images...")
+
+    prev_image = read_image(prev_path)
+    curr_image = read_image(curr_path)
+
+    print("[🤖] Asking Gemini to compare UI differences...")
+    response = model.generate_content(
+        [
+            "Compare these two UI screenshots. Identify UI changes such as added, removed, or modified elements (text boxes, radio buttons, buttons, etc). Return the differences in this JSON format:\n"
+            '[{"label": "New button", "bbox": [x, y, width, height]}]',
+            {"mime_type": "image/png", "data": prev_image},
+            {"mime_type": "image/png", "data": curr_image},
+        ]
+    )
+
+    print("\n[📨] Gemini Response:\n", response.text)
+
+    # Try to parse the JSON response
+    try:
+        return json.loads(response.text)
+    except json.JSONDecodeError:
+        match = re.search(r'\[.*\]', response.text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        return []
+
+
+# Draw bounding boxes on the result image
+def draw_differences(image_path, differences, output_path):
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
+
+    for diff in differences:
+        label = diff.get("label", "Change")
+        x, y, w, h = diff["bbox"]
+        draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
+        draw.text((x, y - 12), label, fill="red")
+
+    image.save(output_path)
+    print(f"[✅] Annotated image saved to: {output_path}")
+
+
+# Main entry point
+if __name__ == "__main__":
+    prev_img = "images/previous.png"
+    curr_img = "images/current.png"
+    output_img = "outputs/annotated_diff.png"
+
+    os.makedirs("outputs", exist_ok=True)
+
+    print("[🔍] Starting UI image comparison...")
+    differences = get_differences(prev_img, curr_img)
+
+    if differences:
+        draw_differences(curr_img, differences, output_img)
+    else:
+        print("[ℹ️] No UI differences detected or failed to parse response.")
