@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Honda KITE</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <script src="serve/js/JQuery.js"></script>
+	<script src="serve/js/TimeOut.js"></script>
+    <script src="serve/js/HomePage.js"></script>
+    <link href="serve/css/bootsrap.css" rel="stylesheet">
+    <link href="serve/css/style.css" rel="stylesheet">
+    <link href="serve/css/HomePage.css" rel="stylesheet">
+    <link href="serve/css/ChatBot.css" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="{{ url_for('home_page') }}" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <img src="serve/images/Honda Symbol H.png" alt="Symbol" id="hondaSymbol">
+            <img src="serve/images/Honda-PowerOfDreams-Symbol.png" height="110%" width="60%">
+        </a>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search..." onkeyup="suggestSearch(this.value)"
+                        autocomplete="off">
+                    <button onclick="performSearch()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div id="suggestions" class="suggestions"></div>
+                </div>
+
+                <a href="{{ url_for('kite_area') }}" class="nav-item nav-link">KITE AREA</a>
+                <!-- Quick Links Dropdown -->
+                <div class="nav-item dropdown">
+                    <a href="#" id="quickLinks" class="nav-link">Quick Links</a>
+                    <div class="dropdown-menu fade-up m-0">
+                        <a href="{{ url_for('kt') }}" class="dropdown-item" target="_blank">KtVideos</a>
+                        <a href="{{ url_for('e_learnings') }}" class="dropdown-item" target="_blank">eLearning</a>
+                        <a href="{{ url_for('ask_kite') }}" class="dropdown-item" target="_blank">Ask KITE</a>
+                        <a href="https://cognizantonline.sharepoint.com/sites/kha-honda" class="dropdown-item"
+                            target="_blank">Know Hub</a>
+                        <a href="serve/downloads/Onboarding Offboarding Checklist.xlsx" class="dropdown-item"
+                            target="_blank">Checklist</a>
+						<a href="{{ url_for('prompt_book') }}" class="dropdown-item">Prompt Book</a>
+                    </div>
+                </div>
+                <!-- Profile Dropdown -->
+                <div class="profile-dropdown">
+                    <a href="#" id="profileLink" class="nav-item nav-link">
+                        <img src="serve/images/Profilepic.png" alt="Profile Icon" id="profileIcon" class="profile-icon">
+                    </a>
+                    <div class="profile-menu" id="profileMenu">
+                        <p></p>
+                        <p>
+                            <h></h>
+                        </p>
+                        <button onclick="showLogoutConfirmation()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="table">
+        <div class="table-cell">
+            <div id="main">
+                <div id="screen">
+                    <div class="road">
+                        <div class="car car1"><img src="serve/images/saloon.png" alt="Car 1"></div>
+                    </div>
+                    <div id="home">
+                        <div id="radial">
+                            <div id="empty"></div>
+                        </div>
+                        <div id="icon"></div>
+                        <div id="status">WELCOME TO</div>
+                        <h1 id="kite">KITE</h1>
+                        <div id="mph"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stars -->
+    <div class="star-container"></div>
+
+    <div class="selector">
+        <ul>
+            <a href="{{ url_for('bootcamp') }}">
+                <li id="bootcampBtn">
+                    <input id="menus" type="checkbox">
+                    <label for="2">Bootcamp</label>
+                </li>
+            </a>
+            <a href="{{ url_for('drive_in_domain') }}">
+                <li id="driveinBtn">
+                    <input id="menus" type="checkbox">
+                    <label for="3">Drive-in Domain</label>
+                </li>
+            </a>
+            <a href="{{ url_for('dashboard') }}">
+                <li id="dashboardBtn">
+                    <input id="menus" type="checkbox">
+                    <label for="4">Project Zone</label>
+                </li>
+            </a>
+            <a href="{{ url_for('automation') }}">
+                <li id="automationBtn">
+                    <input id="menus" type="checkbox">
+                    <label for="5">AutoInno Hub</label>
+                </li>
+            </a>
+
+            <li id="fameBtn">
+                <input id="menus" type="checkbox">
+                <label for="6"><a href="https://datadiscoverystudio.netlify.app">DDS</a></label>
+                <a href="x"></a>
+            </li>
+
+            <a href="{{ url_for('fuel_up') }}">
+                <li id="fuelupBtn">
+                    <input id="menus" type="checkbox">
+                    <label for="7">Fuel-up
+            </a></label>
+            </li></a>
+        </ul>
+    </div>
+
+    <!-- Side Tab -->
+    <div class="tab-bootCamp tab-content">
+        <h6>Bootcamp</h6>
+        <img src="serve/images/bootcamp.png" alt="bootcamp-map">
+    </div>
+    <div class="tab-driveIn tab-content">
+        <h6>Drive-in domain</h6>
+        <img src="serve/images/drive-in domain.png" alt="drivein-view">
+    </div>
+    <div class="tab-dashboard tab-content">
+        <h6>Project Zone</h6>
+        <img src="serve/images/dashboard.png" alt="dashboard-view">
+    </div>
+    <div class="tab-automation tab-content">
+        <h6>AutoInno Hub</h6>
+        <img src="serve/images/automation.png" alt="automation-overview">
+    </div>
+    <div class="tab-fame tab-content">
+        <h6>Data Discovery Studio</h6>
+
+    </div>
+    <div class="tab-fuelup tab-content">
+        <h6>Fuel-up</h6>
+        <img src="serve/images/fuel-up.png" alt="fuelup-view">
+    </div>
+
+    <!-- Blurred background -->
+    <div class="blurred-background" id="blurredBackground"></div>
+
+    <!-- Semi-transparent overlay for home page -->
+    <div class="home-overlay" id="homeOverlay"></div>
+
+    <!-- Confirmation message box -->
+    <div class="message-box" id="messageBox">
+        <h2>Are you sure you want to log out?</h2>
+        <button onclick="confirmLogout()">Yes</button>
+        <button onclick="cancelLogout()">No</button>
+    </div>
+
+        <div class="container">
+        <div class="chatbox">
+            <div class="chatbox__support">
+                <div class="chatbox__header">
+                    <div class="chatbox__image--header">
+                        <!-- <img src="https://img.icons8.com/color/48/000000/circled-user-female-skin-type-5--v1.png" alt="image"> -->
+                    </div>
+                    <div class="chatbox__content--header">
+                        <h4 class="chatbox__heading--header">KITE SUPPORT</h4>
+                        <p class="chatbox__description--header">
+                            Hi. Welcome to Kite support. How can I help you?
+                        </p>
+                    </div>
+                </div>
+                <div class="chatbox__messages">
+                    <div></div>
+                </div>
+                <div class="chatbox__footer">
+                    <input class="message-input" type="text" placeholder="Write a message...">
+                    <button class="message-submit">Send</button>
+                </div>
+            </div>
+            <div class="chatbox__button">
+                <button>
+                    <img src="serve/images/chat.png" width="60px" height="60px" />
+                </button>
+            </div>
+        </div>
+    </div>
+	
+	<div class="last-update" id="last-update" style="display: none;">
+        Last Update: <span id="update-time">Loading...</span>
+    </div>
+
+    <script src="serve/js/ChatBot.js"></script>
+    <script src="serve/js/profaneWords.js"></script>
+    <script src="serve/js/sweetalert2.min.js"></script>
+    <script src="serve/js/jquery-min.js"></script>
+    <script src="serve/js/indexBOT.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+	
+	<script src="serve/js/JQuery.js"></script>
+    <link href="serve/css/bootsrap.css" rel="stylesheet">
+    <link href="serve/css/style.css" rel="stylesheet">
+    <link href="serve/css/index.css" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap" rel="stylesheet">
+</head>
+ 
+ 
+<body>
+ 
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <img src="serve/images/Honda Symbol H.png" alt="Symbol" id="hondaSymbol">
+            <img src="serve/images/Honda-PowerOfDreams-Symbol.png" height="110%" width="60%">
+        </a>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="{{ url_for('sign_up')}} "onclick="closeTab()" class="nav-item nav-link">SignUP</a>
+            </div>
+        </div>
+    </nav>
+ 
+    <div class="container">
+        <h2>Login</h2>
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="id">ID</label>
+                <input type="text" id="id" name="id" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+                <label for="pass">PASSWORD:</label>
+                <input type="password" id="pass" name="pass" placeholder="admin" autocomplete="off" required>
+            </div>
+            <button type="submit" class="register-button">Login</button>
+        </form>
+        <!-- <a href="{{ url_for('home_page') }}"> -->
+           
+        <!-- </a> -->
+    </div>
+
+         <script src="serve/js/index.js"></script>
+</body>
+</html>
